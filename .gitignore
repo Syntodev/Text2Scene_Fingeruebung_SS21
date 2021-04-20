@@ -1,3 +1,6 @@
+#Selfmade git ignore stuff
+Trainingsdaten/**
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
