@@ -1,16 +1,36 @@
-# This is a sample Python script.
+import spacy
+import get_input as gi
+#spacy.cli.download("en_core_web_sm")   #<---------- ggf muss das hier laufen, falls es bisher nicht installiert ist.
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+nlp = spacy.load("en_core_web_sm")
 
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+input = gi.get_input_data()
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+
+
+def test_2(text):
+    doc = nlp(text)
+
+    for token in doc:
+        print(token.text, token.pos_)
+    #for ent in doc.ents:
+        #print(ent.text, ent.label_)
+        #print(ent.text, ent.label_)
+
+    #print(doc.text)
+    print(spacy.explain("GPE"))
+
+
+test_2(input[0])
+
+
+#for text_passage in input:
+    #test_2(text_passage)
+
+
+#token.text return the text of a token
+
+#TODO #TODO #TODO #TODO #TODO #TODO #TODO #TODO
+#Was können wir bisher:
+#Wir können den Text von allen .xml Dateien lesen und diese mit mithilfe von Spacy mit PoS Tags versehen.
