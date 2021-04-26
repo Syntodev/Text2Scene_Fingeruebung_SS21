@@ -1,55 +1,11 @@
-import spacy
-import get_input as gi
-import csv
-import os
 import pydot
-import visualisierung as vi
 from xml.etree import ElementTree
-from matplotlib import pyplot as plt
-from collections import Counter
 import copy
 
-
-def create_picture(name, places, locations, spatial_entities, nonmotionevents, paths):
-    name_of_drawing = "Visualisierung für: "+str(name)
-    graph = pydot.Dot('my_graph', graph_type='graph', bgcolor='white', label=name_of_drawing)
-        # Add nodes
-    #cwd = os.getcwd()
-    #print(cwd)
-    for i in places:
-        my_node = pydot.Node(i, label=i, fillcolor = 'blue', style="filled")  #fontcolor = 'red'
-        graph.add_node(my_node)
-    for j in locations:
-        my_node = pydot.Node(j, label=j, fillcolor='green', style="filled")  # fontcolor = 'red'
-        graph.add_node(my_node)
-
-    for pos_edge in places:
-        for pos_match in locations:
-            if pos_edge[0] == pos_match[0]:
-                my_edge = pydot.Edge(pos_edge, pos_match, color='red', penwidth=3, label="QLink")
-                graph.add_edge(my_edge)
-        # Or, without using an intermediate variable:
-    graph.add_node(pydot.Node('b', shape='circle'))
-    my_edge = pydot.Edge("Pizzeria", "italy", color='red', penwidth=3, label="QLink")
-    graph.add_edge(my_edge)
-        # Add edges
-    my_edge = pydot.Edge('a', 'b', color='blue', penwidth=3)
-    graph.add_edge(my_edge)
-        # Or, without using an intermediate variable:
-    graph.add_edge(pydot.Edge('b', 'c', color='blue'))
-
-
-
-    output_graphviz_svg = graph.create_svg()
-    name_of_finished_drawing_file_png = name_of_drawing+".png"
-    graph.write_png(name_of_finished_drawing_file_png)
-
-def extract_required_information_for_visualization(xml_file):
-    graph = pydot.Dot('my_graph', graph_type='graph', bgcolor='white', label="test_drawing")
+def create_picture(xml_file, name):
+    graph = pydot.Dot('my_graph', graph_type='graph', bgcolor='white', label=name)
     tree = ElementTree.parse(xml_file)
     root = tree.getroot()
-    test = []
-    counter = 0
 
     #Here we gather the IDs for the Metalinked Tags
     metalinked_ids = []
@@ -62,7 +18,6 @@ def extract_required_information_for_visualization(xml_file):
                     else:
                         id_connection = [sub_tag.attrib['fromID'], sub_tag.attrib['toID']]
                         metalinked_ids.append(id_connection)
-    print("große Liste:",metalinked_ids)
     connected_nodes_metalinks_list = []
     for edge in metalinked_ids:
         hit_left_node = 0
@@ -98,87 +53,88 @@ def extract_required_information_for_visualization(xml_file):
             connected_nodes_metalinks_list.append(edge)
     #Now we got the IDs of the Tags that are getting merged by Metalinks
     #The IDs are in the list: connected_nodes_metalinks_list
+    list_of_multilinked_ids = []
+    for list in connected_nodes_metalinks_list:
+        list_of_multilinked_ids = list_of_multilinked_ids + list
 
 
+    nodes_in_graph_dict = dict()
+    #merge_nodes weil die mit Metalinks  versehen wurden
+    for connected_nodes in connected_nodes_metalinks_list:
+        for i in range(len(connected_nodes)):
+            if i == 1:  #we start at 1 to get a label with text
+                continue
+            nodes_in_graph_dict[connected_nodes[i]] = connected_nodes[1]
+
+    nodes_in_graph_dict_copy = copy.deepcopy(nodes_in_graph_dict)
+
+    call_nodes = 'id'
     for elem in root:
         if elem.tag == 'TAGS':
             for sub_tag in elem:
-                if sub_tag.tag == "PLACE":
-                    if sub_tag.attrib['text'] == '':
-                        continue
-                    #my_node = pydot.Node(sub_tag.attrib['id'], label=sub_tag.attrib['text'], fillcolor='blue', style="filled")
-                    my_node = pydot.Node(sub_tag.attrib['text'], label=sub_tag.attrib['text'], fillcolor='blue', style="filled")
-                    graph.add_node(my_node)
-                elif sub_tag.tag == "LOCATION": #place + path??
+                if not(sub_tag.tag in ["PLACE", "SPATIAL_ENTITY", "NONMOTION_EVENT", "PATH"]):
+                    continue
+                if sub_tag.attrib['id'] in nodes_in_graph_dict:
                     pass
-                elif sub_tag.tag == "SPATIAL_ENTITY":
-                    if sub_tag.attrib['text'] == '':
-                        continue
-                    my_node = pydot.Node(sub_tag.attrib['text'], label=sub_tag.attrib['text'], fillcolor='red',
-                                         style="filled")  # fontcolor = 'red'
-                    graph.add_node(my_node)
-                elif sub_tag.tag == "NONMOTION_EVENT":
-                    if sub_tag.attrib['text'] == '':
-                        continue
-                    my_node = pydot.Node(sub_tag.attrib['text'], label=sub_tag.attrib['text'], fillcolor='orange',
-                                         style="filled")  # fontcolor = 'red'
-                    graph.add_node(my_node)
-                elif sub_tag.tag == "PATH":
-                    if sub_tag.attrib['text'] == '':
-                        continue
-                    counter += 1
-                    if sub_tag.attrib['text'] != "edge":    #Das Visualisierungsprogramm gibt einen Error, wenn ein Knoten "edge" heißt,
-                                                            #deswegen benenne wir den Knoten um in "edge'"
-                        my_node = pydot.Node(sub_tag.attrib['text'], label=sub_tag.attrib['text'], fillcolor='green',
-                                             style="filled")  # fontcolor = 'red'
-                        graph.add_node(my_node)
+                else:
+                    fill_col = "pink"
+                    if sub_tag.tag == "PLACE":
+                        my_node = pydot.Node(sub_tag.attrib[call_nodes], label=sub_tag.attrib['text'], fillcolor='blue', style="filled")
+                    elif sub_tag.tag == "SPATIAL_ENTITY":
+                        my_node = pydot.Node(sub_tag.attrib[call_nodes], label=sub_tag.attrib['text'], fillcolor='red',
+                                             style="filled")
+                    elif sub_tag.tag == "NONMOTION_EVENT":
+                        my_node = pydot.Node(sub_tag.attrib[call_nodes], label=sub_tag.attrib['text'], fillcolor='orange',
+                                             style="filled")
+                    elif sub_tag.tag == "PATH":
+                        if sub_tag.attrib['text'] != "edge":    # Das Visualisierungsprogramm gibt einen Error, wenn ein Knoten "edge" heißt,
+                                                                # deswegen benenne wir den Knoten um in "edge'"
+                            my_node = pydot.Node(sub_tag.attrib[call_nodes], label=sub_tag.attrib['text'],
+                                                 fillcolor='green',
+                                                 style="filled")  # fontcolor = 'red'
+                            graph.add_node(my_node)
+                        else:
+                            my_node = pydot.Node(sub_tag.attrib[call_nodes], label="edge'", fillcolor='green',
+                                                 style="filled")
                     else:
-                        my_node = pydot.Node("edge'", label="edge'", fillcolor='green',
-                                             style="filled")  # fontcolor = 'red'
-                        graph.add_node(my_node)
+                        my_node = pydot.Node("what", label="what", fillcolor=fill_col,
+                                             style="filled")
+                    nodes_in_graph_dict[sub_tag.attrib['id']] = "sth"
+                    graph.add_node(my_node)
 
             for sub_tag in elem:
                 if sub_tag.tag == "QSLINK":
-                    if sub_tag.attrib['fromText'] == '' or sub_tag.attrib['toText'] == '':
-                        continue
-                    if sub_tag.attrib['fromText'] == 'edge' and sub_tag.attrib['toText'] == 'edge':
-                        my_edge = pydot.Edge("edge'", "edge'", color='red',
-                                             penwidth=3, label=sub_tag.attrib['relType'])
-                        continue
-                    if sub_tag.attrib['fromText'] == 'edge':
-                        my_edge = pydot.Edge("edge'", sub_tag.attrib['toText'], color='red',
-                                             penwidth=3, label=sub_tag.attrib['relType'])
-                        continue
-                    if sub_tag.attrib['toText'] == 'edge':
-                        my_edge = pydot.Edge(sub_tag.attrib['fromText'], "edge'", color='red',
-                                             penwidth=3, label=sub_tag.attrib['relType'])
-                        continue
-                    #my_edge = pydot.Edge(sub_tag.attrib['fromID'], sub_tag.attrib['toID'], color='red', penwidth=3, label=sub_tag.attrib['relType'])
-                    my_edge = pydot.Edge(sub_tag.attrib['fromText'], sub_tag.attrib['toText'], color='red', penwidth=3, label=sub_tag.attrib['relType'])
+                    if name == "Bicycles_visualisierung.png":
+                        if sub_tag.attrib['fromID'] == "m5" or \
+                                sub_tag.attrib['fromID'] == "m7" or \
+                                sub_tag.attrib['fromID'] == "m8" or \
+                                sub_tag.attrib['fromID'] == "m43" or \
+                                sub_tag.attrib['fromID'] == "m2":
+                            continue
+                    from_id = sub_tag.attrib['fromID']
+                    to_id = sub_tag.attrib['toID']
+                    if sub_tag.attrib['fromID'] in nodes_in_graph_dict_copy:
+                        from_id = nodes_in_graph_dict_copy[sub_tag.attrib['fromID']]
+                    if sub_tag.attrib['toID'] in nodes_in_graph_dict_copy:
+                        to_id = nodes_in_graph_dict_copy[sub_tag.attrib['toID']]
+                    my_edge = pydot.Edge(from_id, to_id, color='red', penwidth=3, label=sub_tag.attrib['relType'])
                     graph.add_edge(my_edge)
+                    continue
                 elif sub_tag.tag == "OLINK":
-                    if sub_tag.attrib['fromText'] == '' or sub_tag.attrib['toText'] == '':
-                        continue
-                    if sub_tag.attrib['fromText'] == 'edge' and sub_tag.attrib['toText'] == 'edge':
-                        my_edge = pydot.Edge("edge'", "edge'", color='blue',
-                                             penwidth=3, label=sub_tag.attrib['relType'])
-                        continue
-                    if sub_tag.attrib['fromText'] == 'edge':
-                        my_edge = pydot.Edge("edge'", sub_tag.attrib['toText'], color='blue',
-                                             penwidth=3, label=sub_tag.attrib['relType'])
-                        continue
-                    if sub_tag.attrib['toText'] == 'edge':
-                        my_edge = pydot.Edge(sub_tag.attrib['fromText'], "edge'", color='blue',
-                                             penwidth=3, label=sub_tag.attrib['relType'])
-                        continue
-                    #my_edge = pydot.Edge(sub_tag.attrib['fromID'], sub_tag.attrib['toID'], color='blue', penwidth=3, label=sub_tag.attrib['relType'])
-                    my_edge = pydot.Edge(sub_tag.attrib['fromText'], sub_tag.attrib['toText'], color='blue', penwidth=3, label=sub_tag.attrib['relType'])
+                    from_id = sub_tag.attrib['fromID']
+                    to_id = sub_tag.attrib['toID']
+                    if sub_tag.attrib['fromID'] in nodes_in_graph_dict_copy:
+                        from_id = nodes_in_graph_dict_copy[sub_tag.attrib['fromID']]
+                    if sub_tag.attrib['toID'] in nodes_in_graph_dict_copy:
+                        to_id = nodes_in_graph_dict_copy[sub_tag.attrib['toID']]
+                    my_edge = pydot.Edge(from_id, to_id, color='blue', penwidth=3, label=sub_tag.attrib['relType'])
                     graph.add_edge(my_edge)
-                elif sub_tag.tag == "METALINK":
-                    pass
-    graph.write_png("testdrawing.png")
-    places_locations_spatial_entities_nonmotionevents_paths = []
-    return places_locations_spatial_entities_nonmotionevents_paths
+                    continue
+
+
+    final_name = name
+    graph.write_png(final_name)
+    return
 
 def visualisierung_fuer_nummber_vier(abs_paths_to_xml_files):
     files_to_visualize = []
@@ -187,14 +143,11 @@ def visualisierung_fuer_nummber_vier(abs_paths_to_xml_files):
             files_to_visualize.append(file)
     for file in files_to_visualize:
         if file[-12:] == "Bicycles.xml":
-            name = "Bicycles.xml"
-            continue
+            name = "Bicycles_visualisierung.png"
+
         else:
-            name = "Highlights_of_the_Prado_Museum.xml"
-        visualize_this = extract_required_information_for_visualization(file)
-        Place = ["Pizzeria","Wash Saloon"]
-        Location = ["italy", "Spain"]
-        spatial_entity = ["ok"]
-        nonmotionevent = ["sitting"]
-        path = ["over there"]
-        create_picture(name, Place, Location, spatial_entity, nonmotionevent, path)
+            name = "Highlights_of_the_Prado_Museum_visualisierung.png"
+            #continue
+        create_picture(file, name)
+
+
