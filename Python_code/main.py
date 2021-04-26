@@ -137,15 +137,6 @@ def get_tags_from_xml(abs_paths_to_xml_data):
     return_list = [sub_tag_dict, sub_tag_QS_link_types, double_list_with_qs_and_os_counted_trigger_lists, count_motion_verb]
     return return_list
 
-def do_part_2_2_vorverarbeitung(all_texts):
-    #new_directory_name = "output_data"
-    #output_csv_filename = "output_text_with_pos"
-    #output_count_pos_tags = "output_count_pos_tags"
-
-    create_dir_for_saving_data("output_data")
-    #dict_with_sentence_lengths = write_into_csv_file("output_data", "output_text_with_pos", all_texts, "output_count_pos_tags")
-    dict_with_sentence_lengths = write_into_csv_file("output_data", "output_text_with_pos",all_texts[0:1], "output_count_pos_tags")
-    return dict_with_sentence_lengths
 
 def write_counted_tags_into_csv(tags_in_dict_counted):
     #cur_abs_path = os.path.abspath("")
@@ -162,6 +153,7 @@ def write_counted_tags_into_csv(tags_in_dict_counted):
         signal_number = tags_in_dict_counted['SPATIAL_SIGNAL'] + tags_in_dict_counted['MOTION_SIGNAL']
         thewriter.writerow(['Signal', signal_number])
 
+
 def write_counted_qslink_types_into_csv(dict_with_qs_link_types):
     csv_name_for_qs_link_types = "output_counted_qslink_types.csv"
     with open(csv_name_for_qs_link_types, 'w', newline='') as myfile:
@@ -172,6 +164,7 @@ def write_counted_qslink_types_into_csv(dict_with_qs_link_types):
                 thewriter.writerow(["No Type specified", dict_with_qs_link_types.get(entry)])
             else:
                 thewriter.writerow([entry, dict_with_qs_link_types.get(entry)])
+
 
 def write_counted_qslink_and_oslink_praep_word_triggers_into_csv(list_with_dicts_for_qs_and_os_link_triggers):
     csv_name = "output_counted_qs_and_os_link_praep_triggers.csv"
@@ -187,16 +180,15 @@ def write_counted_qslink_and_oslink_praep_word_triggers_into_csv(list_with_dicts
         for entry in list_with_dicts_for_qs_and_os_link_triggers[1]:
             thewriter.writerow([entry, list_with_dicts_for_qs_and_os_link_triggers[1].get(entry)])
 
+
 def write_counted_motion_verb_into_csv(dict_with_motion_text):
     csv_name = "output_counted_motion_verbs.csv"
-    #sort_dict_top_five = sorted(dict_with_motion_text, key=dict_with_motion_text.get, reverse=True)[:5]
-    #print(dict_with_motion_text)
-    print(dict(Counter(dict_with_motion_text).most_common(5)))
     with open(csv_name, 'w', newline='') as myfile:
         thewriter = csv.writer(myfile)
         thewriter.writerow(['Name:', 'Anzahl:'])
         for entry in dict(Counter(dict_with_motion_text).most_common(5)):
             thewriter.writerow([entry, dict_with_motion_text.get(entry)])
+
 
 def create_graph_for_sentence_lengths(dict_with_sentence_lengths):
     x = []
@@ -210,7 +202,19 @@ def create_graph_for_sentence_lengths(dict_with_sentence_lengths):
     plt.title("Matplotlib demo")
     plt.xlabel("Satzlänge")
     plt.ylabel("Häufigkeit")
-    plt.show()
+    plt.savefig('Verteilung_der_satzlaenge.png', dpi=300, bbox_inches='tight')
+    #plt.show()
+
+
+def do_part_2_2_vorverarbeitung(all_texts):
+    #new_directory_name = "output_data"
+    #output_csv_filename = "output_text_with_pos"
+    #output_count_pos_tags = "output_count_pos_tags"
+
+    create_dir_for_saving_data("output_data")
+    dict_with_sentence_lengths = write_into_csv_file("output_data", "output_text_with_pos", all_texts, "output_count_pos_tags")
+    #dict_with_sentence_lengths = write_into_csv_file("output_data", "output_text_with_pos",all_texts[0:1], "output_count_pos_tags")
+    return dict_with_sentence_lengths
 
 
 def main():
