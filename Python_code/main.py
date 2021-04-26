@@ -2,14 +2,14 @@ import spacy
 import get_input as gi
 import csv
 import os
+import pydot
+import visualisierung as vi
 from xml.etree import ElementTree
 from matplotlib import pyplot as plt
 from collections import Counter
 #spacy.cli.download("en_core_web_sm")   #<---------- ggf muss das hier laufen, falls es bisher nicht installiert ist.
 
-
 nlp = spacy.load("en_core_web_sm")
-
 
 def create_dir_for_saving_data(new_directory_name):
     show_warnings = 0
@@ -212,13 +212,14 @@ def do_part_2_2_vorverarbeitung(all_texts):
     #output_count_pos_tags = "output_count_pos_tags"
 
     create_dir_for_saving_data("output_data")
-    dict_with_sentence_lengths = write_into_csv_file("output_data", "output_text_with_pos", all_texts, "output_count_pos_tags")
-    #dict_with_sentence_lengths = write_into_csv_file("output_data", "output_text_with_pos",all_texts[0:1], "output_count_pos_tags")
+    #dict_with_sentence_lengths = write_into_csv_file("output_data", "output_text_with_pos", all_texts, "output_count_pos_tags")
+    dict_with_sentence_lengths = write_into_csv_file("output_data", "output_text_with_pos",all_texts[0:1], "output_count_pos_tags")
     return dict_with_sentence_lengths
 
 
 def main():
-    show_grafic = 0
+
+    show_graphic = 0
     input_data = gi.get_input_data()
     all_texts = input_data[0]
     dict_with_sentence_lengths = do_part_2_2_vorverarbeitung(all_texts)
@@ -227,11 +228,13 @@ def main():
     #count the different tags for 2.3.b)
     xml_tags = get_tags_from_xml(abs_paths_to_xml_files)
     write_counted_tags_into_csv(xml_tags[0])
-    write_counted_qslink_types_into_csv(xml_tags[1])
-    write_counted_qslink_and_oslink_praep_word_triggers_into_csv(xml_tags[2])
+    #write_counted_qslink_types_into_csv(xml_tags[1])
+    #write_counted_qslink_and_oslink_praep_word_triggers_into_csv(xml_tags[2])
     write_counted_motion_verb_into_csv(xml_tags[3])
-    if show_grafic:
+    if show_graphic:
         create_graph_for_sentence_lengths(dict_with_sentence_lengths)
+
+    vi.visualisierung_fuer_nummber_vier(abs_paths_to_xml_files)
 
 
 main()
