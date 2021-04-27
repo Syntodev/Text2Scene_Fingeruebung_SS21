@@ -2,7 +2,6 @@ import spacy
 import get_input as gi
 import csv
 import os
-#import pydot
 import visualisierung as vi
 from xml.etree import ElementTree
 from matplotlib import pyplot as plt
