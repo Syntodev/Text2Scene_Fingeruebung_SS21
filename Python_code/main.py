@@ -19,8 +19,7 @@ def create_dir_for_saving_data(new_directory_name):
     cur_abs_path = os.path.abspath("")
     path = os.path.join(cur_abs_path, new_directory_name)
     if show_info == 1:
-        print("Wir versuchen den Ordner '"+str(new_directory_name)+"' zu erstellen um dort die von Spacy tokenisierten und"
-              " mit PoS versehenen Texte zu speichern.")
+        print("Wir versuchen den Ordner '"+str(new_directory_name)+"' zu erstellen um dort den Output von diesem Programm zu speichern")
     try:
         os.mkdir(path)
         print("Wir haben einen neuen Order mit dem Pfad:",path,"erstellt.")
