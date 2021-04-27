@@ -7,7 +7,8 @@ import visualisierung as vi
 from xml.etree import ElementTree
 from matplotlib import pyplot as plt
 from collections import Counter
-spacy.cli.download("en_core_web_sm")   #<---------- ggf muss das hier laufen, falls es bisher nicht installiert ist.
+spacy.cli.download("en_core_web_sm")
+#Die obige Zeile downloaded "en_core_web_sm", nachdem man das gedownloaded hat, kann man es auskommentieren
 
 nlp = spacy.load("en_core_web_sm")
 
