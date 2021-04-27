@@ -1,3 +1,4 @@
+import spacy
 import pydot
 from xml.etree import ElementTree
 import copy
@@ -7,7 +8,7 @@ def create_picture(xml_file, name):
     tree = ElementTree.parse(xml_file)
     root = tree.getroot()
 
-    #Here we gather the IDs for the Metalinked Tags
+    #Hier prüfen wir, welche Knoten mit einem Metalink verbunden sind.
     metalinked_ids = []
     for elem in root:
         if elem.tag == 'TAGS':
@@ -51,33 +52,33 @@ def create_picture(xml_file, name):
                     connected_node.append(edge[0])
         else:
             connected_nodes_metalinks_list.append(edge)
-    #Now we got the IDs of the Tags that are getting merged by Metalinks
-    #The IDs are in the list: connected_nodes_metalinks_list
+    #Wir erstellen eine einfache Liste um schneller zu überprüfen, ob eine Entity in einem Metalink ist
     list_of_multilinked_ids = []
     for list in connected_nodes_metalinks_list:
         list_of_multilinked_ids = list_of_multilinked_ids + list
 
 
     nodes_in_graph_dict = dict()
-    #merge_nodes weil die mit Metalinks  versehen wurden
+    #Hier mergen wir Nodes, die mit Metalinks versehen sind
+    #Wir wählen den Knoten an Pos 1 als Vertreter für die zusammengefügten Knoten
     for connected_nodes in connected_nodes_metalinks_list:
         for i in range(len(connected_nodes)):
             if i == 1:  #we start at 1 to get a label with text
                 continue
             nodes_in_graph_dict[connected_nodes[i]] = connected_nodes[1]
 
-    nodes_in_graph_dict_copy = copy.deepcopy(nodes_in_graph_dict)
+    nodes_in_graph_dict_copy = copy.deepcopy(nodes_in_graph_dict)#Hier speichern wir, welche Nodes gemerged wurden
 
     call_nodes = 'id'
     for elem in root:
-        if elem.tag == 'TAGS':
+        if elem.tag == 'TAGS':  #Zunächst fügen wir alle Knoten ein, die mit Tags angegeben sind
             for sub_tag in elem:
                 if not(sub_tag.tag in ["PLACE", "SPATIAL_ENTITY", "NONMOTION_EVENT", "PATH"]):
                     continue
                 if sub_tag.attrib['id'] in nodes_in_graph_dict:
                     pass
                 else:
-                    fill_col = "pink"
+                    fill_col = "black"
                     if sub_tag.tag == "PLACE":
                         my_node = pydot.Node(sub_tag.attrib[call_nodes], label=sub_tag.attrib['text'], fillcolor='blue', style="filled")
                     elif sub_tag.tag == "SPATIAL_ENTITY":
@@ -101,7 +102,7 @@ def create_picture(xml_file, name):
                                              style="filled")
                     nodes_in_graph_dict[sub_tag.attrib['id']] = "sth"
                     graph.add_node(my_node)
-
+            #--------Nun fügen wir die Kanten in den Graphen ein
             for sub_tag in elem:
                 if sub_tag.tag == "QSLINK":
                     if name == "Bicycles_visualisierung.png":
@@ -131,12 +132,29 @@ def create_picture(xml_file, name):
                     graph.add_edge(my_edge)
                     continue
 
+    # -----------------------------------------
+    # Hier finden wir die Locations, welche wir am Ende dem Bild hinzufügen.
+    dom = ElementTree.parse(xml_file)
+    current_text = dom.findall('TEXT')
 
+    nlp = spacy.load("en_core_web_sm")
+    doc = nlp(current_text[0].text)
+    loc_dict = dict()
+    for token in doc:
+        if token.ent_type_ == "LOC":
+            if str(token) in loc_dict:
+                loc_dict[str(token)] += 1
+            else:
+                loc_dict[str(token)] = 1
+    for location in loc_dict:
+        my_node = pydot.Node(location, label=location, fillcolor='pink', style="filled")
+        graph.add_node(my_node)
+    # -----------------------------------------
     final_name = name
     graph.write_png(final_name)
     return
 
-def visualisierung_fuer_nummber_vier(abs_paths_to_xml_files):
+def visualisierung_fuer_nummer_vier(abs_paths_to_xml_files):
     files_to_visualize = []
     for file in abs_paths_to_xml_files:
         if file[-12:] == "Bicycles.xml" or file[-34:] == "Highlights_of_the_Prado_Museum.xml":
@@ -144,10 +162,6 @@ def visualisierung_fuer_nummber_vier(abs_paths_to_xml_files):
     for file in files_to_visualize:
         if file[-12:] == "Bicycles.xml":
             name = "Bicycles_visualisierung.png"
-
         else:
             name = "Highlights_of_the_Prado_Museum_visualisierung.png"
-            #continue
         create_picture(file, name)
-
-
