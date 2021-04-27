@@ -221,9 +221,8 @@ def create_graph_for_sentence_lengths(dict_with_sentence_lengths):
         x.append(entry)
         y.append(dict_with_sentence_lengths.get(entry))
     plt.bar(x, y, align='center')
-    plt.title('Bar graph')
 
-    plt.title("Matplotlib demo")
+    plt.title("Anzahl der Wörter pro Satz")
     plt.xlabel("Satzlänge")
     plt.ylabel("Häufigkeit")
     plt.savefig('Verteilung_der_satzlaenge.png', dpi=300, bbox_inches='tight')

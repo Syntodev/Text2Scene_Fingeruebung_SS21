@@ -4,7 +4,8 @@ from xml.etree import ElementTree
 import copy
 
 def create_picture(xml_file, name):
-    graph = pydot.Dot('my_graph', graph_type='graph', bgcolor='white', label=name)
+    graph = pydot.Dot('my_graph', graph_type='graph', layout="circo", bgcolor='white', label=name)
+    #graph.layout(prog="circo")
     tree = ElementTree.parse(xml_file)
     root = tree.getroot()
 
@@ -58,16 +59,32 @@ def create_picture(xml_file, name):
         list_of_multilinked_ids = list_of_multilinked_ids + list
 
 
-    nodes_in_graph_dict = dict()
+    #Um einen möglichst guten Knoten zu finden den wir anzeigen, wenn wir Knoten mergen versuchen
+    #wir einen zu finden der keine ausgehenden Metalinks hat.
+    #Falls wir das für eine Gruppe nicht können, wählen wir willkürlich das [1] Element in der entsprechenden Liste
+    liste_mit_vertreterknoten = []
+    for zu_bestimmender_vertreterknoten in connected_nodes_metalinks_list:
+        possible_vertreterknoten = copy.deepcopy(zu_bestimmender_vertreterknoten)
+        for edge in metalinked_ids:
+            if edge[0] in possible_vertreterknoten:
+                possible_vertreterknoten.remove(edge[0])
+        if len(possible_vertreterknoten) == 1:  #Falls es einen Knoten gibt von dem keine Metalinks ausgehen wählen wir
+                                                #diesen als Vertreter
+            liste_mit_vertreterknoten.append((possible_vertreterknoten[0]))
+        else:
+            liste_mit_vertreterknoten.append(zu_bestimmender_vertreterknoten[1])
+
     #Hier mergen wir Nodes, die mit Metalinks versehen sind
     #Wir wählen den Knoten an Pos 1 als Vertreter für die zusammengefügten Knoten
+    nodes_in_graph_dict = dict()
+    counter = 0
     for connected_nodes in connected_nodes_metalinks_list:
         for i in range(len(connected_nodes)):
-            if i == 1:  #we start at 1 to get a label with text
+            if i == connected_nodes.index(liste_mit_vertreterknoten[counter]):  #Nur der Vertreter soll von au0en 'sichtbar' sein
                 continue
-            nodes_in_graph_dict[connected_nodes[i]] = connected_nodes[1]
-
-    nodes_in_graph_dict_copy = copy.deepcopy(nodes_in_graph_dict)#Hier speichern wir, welche Nodes gemerged wurden
+            nodes_in_graph_dict[connected_nodes[i]] = liste_mit_vertreterknoten[counter]
+        counter += 1
+    nodes_in_graph_dict_copy = copy.deepcopy(nodes_in_graph_dict)#Hier speichern wir, welche Nodes "gemerged" wurden/werden
 
     call_nodes = 'id'
     for elem in root:
